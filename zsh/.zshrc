@@ -142,7 +142,7 @@ export DISPLAY=":0"
 export DYLD_LIBRARY_PATH="/usr/local/opt/sqlite/lib"
 
 if [[ -z "$OS_ROADMAP_SHOWN" ]]; then
-    cat ~/projects/agenda/TODO.txt
+    todo -t daily
     export OS_ROADMAP_SHOWN=1
 fi
 
