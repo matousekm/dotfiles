@@ -87,13 +87,12 @@ notes() {
 todo() {
     local original_dir=$PWD
     local do_show=false
+    local topic=""
 
-    # flag parsing
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            -s|--show)
-                do_show=true
-                ;;
+            -s|--show) do_show=true ;;
+            -t|--topic) topic="$2"; shift ;;
         esac
         shift
     done
@@ -102,10 +101,35 @@ todo() {
     rm -f "git.log"
     (git pull origin main > /dev/null 2> "git.log" &)
 
-    if [ "$do_show" = true ]; then
-        cat ~/projects/agenda/TODO.txt
+    if [[ -n "$topic" ]]; then
+        local in_section=false
+        local lower_topic="$(printf '%s' "$topic" | tr '[:upper:]' '[:lower:]')"
+
+        while IFS= read -r line; do
+            if [[ "$line" =~ --- ]]; then
+                in_section=false
+                continue
+            fi
+            
+            trimmed="${line#"${line%%[![:space:]]*}"}"
+            lower_trimmed="$(printf '%s' "$trimmed" | tr '[:upper:]' '[:lower:]')"
+
+            if [[ "$lower_trimmed" == "$lower_topic" ]]; then
+                in_section=true
+                continue
+            fi
+
+            if $in_section; then
+                printf "%s\n" "$line"
+            fi
+
+        done < ~/projects/agenda/TODO.txt
     else
-        vim ~/projects/agenda/TODO.txt
+        if [ "$do_show" = true ]; then
+            cat ~/projects/agenda/TODO.txt
+        else
+            vim ~/projects/agenda/TODO.txt
+        fi
     fi
 
     cd "$original_dir"
